@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Flag Battle LIVE Vertical</title>
+<style>
+:root{color-scheme:dark;--bg:#0b0820;--card:#1e1740;--fg:#f2eeff;--acc:#7c5cff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{display:flex;flex-direction:column;align-items:center;padding:6px}
+canvas{height:min(94vh,960px);aspect-ratio:9/16;max-width:100%;border-radius:12px;background:#0d0920;touch-action:manipulation}
+.bar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:10px 0;font-size:13px;align-items:center;max-width:560px}
+button,input,select{font:inherit;border-radius:10px;border:1px solid #3b3180;background:var(--card);color:var(--fg);padding:8px 12px}
+button{cursor:pointer}button.p{background:var(--acc);border-color:var(--acc)}
+body.hide .bar{display:none}body.hide canvas{height:100vh}
+</style>
+</head>
+<body>
+<canvas id="c" width="540" height="960"></canvas>
+<div class="bar">
+<button class="p" id="go">▶ Start Live</button>
+<label>Har <select id="iv"><option>2</option><option selected>3</option><option>4</option><option>5</option></select> sec</label>
+<label><input type="checkbox" id="snd" checked> Sound</label>
+<label><input type="checkbox" id="mus" checked> Music</label>
+<label><input type="checkbox" id="vo" checked> Awaaz</label>
+<button id="fs">⛶ Fullscreen</button>
+<button id="rs">↻ Restart</button>
+<button id="hd">Chhupao (H)</button>
+<input type="text" id="chat" placeholder="Chat: IN JP US (shield)" autocomplete="off"><button id="send">Send</button>
+</div>
+<script>
+const C=[['IN','India','h',['#ff9933','#fff','#138808'],'#000080'],['JP','Japan','h',['#fff'],'#bc002d'],['FR','France','v',['#0055a4','#fff','#ef4135']],['DE','Germany','h',['#000','#d00','#fc0']],['IT','Italy','v',['#009246','#fff','#ce2b37']],['RU','Russia','h',['#fff','#0039a6','#d52b1e']],['NL','Netherlands','h',['#ae1c28','#fff','#21468b']],['IE','Ireland','v',['#169b62','#fff','#ff883e']],['BE','Belgium','v',['#000','#fae042','#ed2939']],['ES','Spain','h',['#aa151b','#f1bf00','#aa151b']],['UA','Ukraine','h',['#0057b7','#ffd700']],['PL','Poland','h',['#fff','#dc143c']],['ID','Indonesia','h',['#ce1126','#fff']],['AT','Austria','h',['#ed2939','#fff','#ed2939']],['BG','Bulgaria','h',['#fff','#00966e','#d62612']],['HU','Hungary','h',['#ce2939','#fff','#477050']],['BD','Bangladesh','h',['#006a4e'],'#f42a41'],['TR','Turkey','h',['#e30a17'],'#fff'],['BR','Brazil','h',['#009c3b'],'#ffdf00'],['CA','Canada','v',['#d52b1e','#fff','#d52b1e']],['NG','Nigeria','v',['#008751','#fff','#008751']],['PK','Pakistan','h',['#01411c'],'#fff'],['SE','Sweden','h',['#006aa7'],'#fecc02'],['US','United States','h',['#b22234','#fff','#b22234','#fff','#b22234','#fff','#b22234'],'#3c3b6e'],['CN','China','h',['#de2910'],'#ffde00'],['KR','South Korea','h',['#fff'],'#cd2e3a'],['AR','Argentina','h',['#74acdf','#fff','#74acdf'],'#f6b40e'],['MX','Mexico','v',['#006847','#fff','#ce1126']],['EG','Egypt','h',['#ce1126','#fff','#000']],['SA','Saudi Arabia','h',['#006c35'],'#fff'],['AE','UAE','h',['#00732f','#fff','#000']],['ZA','South Africa','h',['#de3831','#002395'],'#007749'],['AF','Afghanistan','v',['#000','#d32011','#007a36']],['IR','Iran','h',['#239f40','#fff','#da0000']],['IQ','Iraq','h',['#ce1126','#fff','#000']],['TH','Thailand','h',['#a51931','#fff','#2d2a4a','#2d2a4a','#fff','#a51931']],['VN','Vietnam','h',['#da251d'],'#ff0'],['PH','Philippines','h',['#0038a8','#ce1126']],['MY','Malaysia','h',['#cc0001','#fff','#cc0001','#fff'],'#010066'],['SG','Singapore','h',['#ef3340','#fff']],['NZ','New Zealand','h',['#00247d'],'#cc142b'],['AU','Australia','h',['#012169'],'#fff'],['CO','Colombia','h',['#fcd116','#fcd116','#003893','#ce1126']],['CL','Chile','h',['#fff','#d52b1e'],'#0039a6'],['PE','Peru','v',['#d91023','#fff','#d91023']],['CH','Switzerland','h',['#d52b1e'],'#fff'],['NO','Norway','h',['#ba0c2f'],'#00205b'],['DK','Denmark','h',['#c8102e'],'#fff'],['FI','Finland','h',['#fff'],'#003580'],['GR','Greece','h',['#0d5eaf','#fff','#0d5eaf','#fff','#0d5eaf']],['PT','Portugal','v',['#006600','#006600','#f00','#f00','#f00']],['RO','Romania','v',['#002b7f','#fcd116','#ce1126']],['KE','Kenya','h',['#000','#bb0000','#006600']],['MA','Morocco','h',['#c1272d'],'#006233'],['DZ','Algeria','v',['#006233','#fff']],['GH','Ghana','h',['#ce1126','#fcd116','#006b3f']]];
+const $=id=>document.getElementById(id),cv=$('c'),ctx=cv.getContext('2d'),W=540,H=960,CX=270,CY=395,R=235,r=12,SP=3.2,HW=.75;
+let balls=[],state='idle',run=false,last=0,sT=0,el=0,lastTick=0,hA=0,outDone=false,parts=[],msg='',wins={},IV=3,round=1,feedA=[],AC=null,popN=0,lastOut='';
+// ---------- audio ----------
+function toneAt(f,d,type,v,t,f2){const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g).connect(AC.destination);o.start(t);o.stop(t+d+.02)}
+function tone(f,d,type,v,w,f2){if(!AC||!$('snd').checked)return;toneAt(f,d,type||'sine',v||.2,AC.currentTime+(w||0),f2)}
+const sTick=c=>{tone(c===1?1320:880,.14,'square',.14);tone(60,.15,'sine',.3)};
+const sBoom=()=>{tone(120,.6,'sawtooth',.35,0,30);tone(70,.7,'sine',.5,0,25)};
+const sWoosh=()=>tone(250,.4,'sawtooth',.07,0,900);
+const sShield=()=>{tone(500,.3,'triangle',.25,0,1300);tone(1300,.2,'sine',.15,.15)};
+const sWin=()=>[523,659,784,1047,1319].forEach((f,i)=>tone(f,.4,'triangle',.25,i*.15));
+const sPop=()=>{tone(300+Math.random()*200,.09,'sine',.4,0,1200);tone(2000,.05,'square',.08)};
+function say(t){if(!$('vo').checked||!window.speechSynthesis)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.rate=1.05;speechSynthesis.speak(u)}catch(e){}}
+// generative original music (copyright free)
+const CH=[[57,60,64],[53,57,60],[48,52,55],[55,59,62]],mf=m=>440*2**((m-69)/12);let mN=0,mS=0;
+function music(){if(!AC||!run||!$('mus').checked){if(AC)mN=AC.currentTime;return}if(mN<AC.currentTime)mN=AC.currentTime;while(mN<AC.currentTime+.4){const t=mN,s=mS%8,ch=CH[Math.floor(mS/8)%4];if(s%2===0)toneAt(55,.18,'sine',.2,t,40);if(s===0||s===3||s===4)toneAt(mf(ch[0]-24),.22,'triangle',.16,t);toneAt(mf(ch[s%3]+(s>=4?24:12)),.2,'square',.03,t);if(s===0)ch.forEach(n=>toneAt(mf(n),1.9,'sine',.035,t));if(s%2)toneAt(7000,.04,'square',.01,t);mN+=.25;mS++}}
+setInterval(music,100);
+// ---------- game ----------
+function openHole(){hA=Math.random()*6.2832;outDone=false;el=0;lastTick=0;sWoosh()}
+function newRound(){balls=C.map(f=>{const a=Math.random()*6.28,d=Math.random()*R*.7,v=Math.random()*6.28;return{f,x:CX+Math.cos(a)*d,y:CY+Math.sin(a)*d,vx:Math.cos(v)*SP,vy:Math.sin(v)*SP,sh:0}});feedA=[];lastOut='';state='intro';sT=0;popN=0;say('Round '+round)}
+function burst(b,n,big){for(let i=0;i<n;i++){const a=Math.random()*6.28,s=(big?2:1)+Math.random()*(big?7:4);parts.push({x:b.x,y:b.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:50+Math.random()*30,c:b.f[3][i%b.f[3].length]})}}
+function out(b){balls.splice(balls.indexOf(b),1);outDone=true;burst(b,40,1);sBoom();lastOut=b.f[1];feedA.unshift(b.f[1]+'  #'+(balls.length+1));feedA.length=Math.min(feedA.length,5);say(b.f[1]+' is out');if(balls.length<=1)endRound()}
+function endRound(){const w=balls[0];wins[w.f[0]]=(wins[w.f[0]]||0)+1;const ch=wins[w.f[0]]>=3;msg=ch?'🏆 CHAMPION\n'+w.f[1]:'🎉 '+w.f[1]+'\nne round jeeta!';if(ch)setTimeout(()=>{wins={}},4300);state='end';sT=0;sWin();say(w.f[1]+(ch?' is the champion':' wins the round'));for(let i=0;i<5;i++)setTimeout(()=>burst(w,40,1),i*300)}
+function phys(){const hx=CX+Math.cos(hA)*R,hy=CY+Math.sin(hA)*R,pull=outDone?0:.05+.12*(el/(IV*1000));
+for(const b of balls){if(pull){const dx=hx-b.x,dy=hy-b.y,d=Math.hypot(dx,dy)||1;b.vx+=dx/d*pull*SP;b.vy+=dy/d*pull*SP}b.x+=b.vx;b.y+=b.vy;const s=Math.hypot(b.vx,b.vy)||1;b.vx*=SP/s;b.vy*=SP/s}
+for(let i=0;i<balls.length;i++)for(let j=i+1;j<balls.length;j++){const a=balls[i],b=balls[j],dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy);if(d<2*r&&d>0){const nx=dx/d,ny=dy/d,o=(2*r-d)/2;a.x-=nx*o;a.y-=ny*o;b.x+=nx*o;b.y+=ny*o;const p=(a.vx-b.vx)*nx+(a.vy-b.vy)*ny;a.vx-=p*nx;a.vy-=p*ny;b.vx+=p*nx;b.vy+=p*ny}}
+let gone=null;for(const b of balls){const dx=b.x-CX,dy=b.y-CY,d=Math.hypot(dx,dy);if(d+r>R){const nx=dx/d,ny=dy/d;let da=Math.abs(Math.atan2(dy,dx)-hA)%6.2832;if(da>3.1416)da=6.2832-da;const inH=!outDone&&da<HW/2;if(!inH||(d<R+r*.6)){if(!inH){const v=b.vx*nx+b.vy*ny;if(v>0){b.vx-=2*v*nx;b.vy-=2*v*ny}b.x=CX+nx*(R-r);b.y=CY+ny*(R-r)}}else if(b.sh>0){b.sh--;sShield();b.vx=-nx*SP;b.vy=-ny*SP;b.x=CX+nx*(R-r-3);b.y=CY+ny*(R-r-3)}else if(!gone)gone=b}}
+if(gone)out(gone)}
+function flag(b,rad){const[f,,o,c,dot]=[b.f[0],0,b.f[2],b.f[3],b.f[4]];ctx.save();ctx.translate(b.x,b.y);ctx.beginPath();ctx.arc(0,0,rad,0,7);ctx.clip();const n=c.length;c.forEach((col,i)=>{ctx.fillStyle=col;if(o==='h')ctx.fillRect(-rad,-rad+i*2*rad/n,2*rad,2*rad/n+1);else ctx.fillRect(-rad+i*2*rad/n,-rad,2*rad/n+1,2*rad)});if(dot){ctx.fillStyle=dot;ctx.beginPath();ctx.arc(0,0,rad*.38,0,7);ctx.fill()}ctx.restore();ctx.beginPath();ctx.arc(b.x,b.y,rad,0,7);ctx.lineWidth=2;ctx.strokeStyle='#0008';ctx.stroke();ctx.font='bold 8px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineWidth=3;ctx.strokeStyle='#000';ctx.strokeText(f,b.x,b.y);ctx.fillStyle='#fff';ctx.fillText(f,b.x,b.y);if(b.sh>0){ctx.beginPath();ctx.arc(b.x,b.y,rad+3,0,7);ctx.lineWidth=3;ctx.strokeStyle='#4df3ff';ctx.stroke();if(b.sh>1){ctx.fillStyle='#4df3ff';ctx.font='bold 10px system-ui';ctx.fillText('x'+b.sh,b.x+rad,b.y-rad)}}}
+function txt(s,x,y,sz,col,al){ctx.font='bold '+sz+'px system-ui';ctx.textAlign=al||'center';ctx.textBaseline='middle';ctx.fillStyle=col;ctx.fillText(s,x,y)}
+function draw(now){ctx.clearRect(0,0,W,H);const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#24195a');g.addColorStop(1,'#0d0920');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+txt('🚩 FLAGS BATTLE',CX,34,30,'#fff');txt('ROUND '+round,20,82,24,'#ffe66b','left');txt('LEFT: '+balls.length,W-20,82,24,'#fff','right');
+const open=state==='play'&&!outDone,pulse=.5+.5*Math.sin(now/80);
+ctx.lineWidth=8;ctx.lineCap='round';ctx.strokeStyle='#7c5cff';ctx.shadowColor='#7c5cff';ctx.shadowBlur=14;ctx.beginPath();if(open)ctx.arc(CX,CY,R,hA+HW/2,hA-HW/2+6.2832);else ctx.arc(CX,CY,R,0,6.2832);ctx.stroke();ctx.shadowBlur=0;
+if(open){ctx.strokeStyle='#ff3b3b';ctx.shadowColor='#ff3b3b';ctx.shadowBlur=20;ctx.lineWidth=5;for(const s of[-1,1]){ctx.beginPath();ctx.arc(CX,CY,R,hA+s*HW/2-.05,hA+s*HW/2+.05);ctx.stroke()}ctx.shadowBlur=0;const lx=CX+Math.cos(hA)*(R+24+pulse*6),ly=CY+Math.sin(hA)*(R+24+pulse*6);txt('OUT',lx,ly,16,'#ff5c5c')}
+balls.forEach(b=>flag(b,r));
+if(state==='play'){const c=Math.max(1,Math.ceil(IV-el/1000));ctx.save();ctx.globalAlpha=.2+.1*pulse;txt(c,CX,CY,240,'#fff');ctx.restore()}
+for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.x+=p.vx;p.y+=p.vy;p.vy+=.08;p.l--;if(p.l<=0){parts.splice(i,1);continue}ctx.globalAlpha=Math.min(1,p.l/30);ctx.fillStyle=p.c;ctx.fillRect(p.x,p.y,5,5)}ctx.globalAlpha=1;
+// bottom panels
+txt(open?'⚠ Hole mein jayega = OUT':(state==='play'&&lastOut?'❌ '+lastOut+' OUT!':''),CX,665,22,open?'#ff8b8b':'#ffe66b');
+txt('❌ OUT LIST',20,710,18,'#ff8b8b','left');feedA.forEach((s,i)=>txt(s,20,742+i*30,i?16:20,i?'#c9c2f0':'#fff','left'));
+txt('🏆 JEET SCORE',300,710,18,'#ffe66b','left');Object.entries(wins).sort((a,b)=>b[1]-a[1]).slice(0,5).forEach(([k,v],i)=>txt(k+'  —  '+v,300,742+i*30,18,'#fff','left'));
+txt('Chat mein country code likho = 🛡️ shield',CX,925,16,'#9a90c8');
+if(state==='intro'){const t=Math.min(1,sT/400),s=1+2.7*Math.pow(t-1,3)+1.7*Math.pow(t-1,2);ctx.fillStyle='#000b';ctx.fillRect(0,0,W,H);ctx.save();ctx.translate(CX,CY);ctx.scale(s,s);txt('ROUND '+round,0,0,84,'#ffe66b');ctx.restore();txt(C.length+' countries · '+IV+' sec mein 1 out',CX,CY+90,20,'#fff');if(popN<3&&sT>popN*260){popN++;sPop();for(let i=0;i<4;i++)burst({x:80+Math.random()*380,y:200+Math.random()*500,f:C[Math.random()*C.length|0]},18,1)}}
+if(state==='end'){ctx.fillStyle='#000c';ctx.fillRect(20,CY-90,W-40,180);msg.split('\n').forEach((l,i)=>txt(l,CX,CY-35+i*70,38,'#ffe66b'))}
+if(state==='idle'){ctx.fillStyle='#000b';ctx.fillRect(0,0,W,H);txt('▶ Start Live dabao',CX,CY,32,'#fff')}}
+function frame(now){const dt=Math.min(now-last,100);last=now;if(run){sT+=dt;if(state==='intro'&&sT>2700){state='play';openHole()}else if(state==='play'){phys();el+=dt;const c=Math.ceil(IV-el/1000);if(c!==lastTick&&c>0){lastTick=c;sTick(c)}if(state==='play'&&el>=IV*1000){if(!outDone&&balls.length>1){const hx=CX+Math.cos(hA)*R,hy=CY+Math.sin(hA)*R;const n=balls.reduce((a,b)=>Math.hypot(b.x-hx,b.y-hy)<Math.hypot(a.x-hx,a.y-hy)?b:a);if(n.sh>0){n.sh--;sShield()}else out(n)}if(state==='play')openHole()}}else if(state==='end'&&sT>4500){round++;newRound()}}draw(now);requestAnimationFrame(frame)}
+// ---------- controls ----------
+function shield(code){const b=balls.find(x=>x.f[0]===code.toUpperCase());if(b&&b.sh<5){b.sh++;sShield();return b}}
+cv.addEventListener('click',e=>{const q=cv.getBoundingClientRect(),x=(e.clientX-q.left)*W/q.width,y=(e.clientY-q.top)*H/q.height;let best=null,bd=r+10;balls.forEach(b=>{const d=Math.hypot(b.x-x,b.y-y);if(d<bd){bd=d;best=b}});if(best&&best.sh<5){best.sh++;sShield()}});
+function send(){$('chat').value.split(/[\s,]+/).filter(Boolean).forEach(shield);$('chat').value=''}
+$('send').onclick=send;$('chat').addEventListener('keydown',e=>{if(e.key==='Enter')send()});
+$('go').onclick=()=>{run=!run;$('go').textContent=run?'⏸ Pause':'▶ Start Live';if(run){AC=AC||new(window.AudioContext||window.webkitAudioContext)();AC.resume();if(state==='idle')newRound()}};
+$('iv').onchange=e=>{IV=+e.target.value;el=0;lastTick=0};
+$('rs').onclick=()=>{wins={};round=1;if(state!=='idle')newRound()};
+$('fs').onclick=()=>{try{document.documentElement.requestFullscreen()}catch(e){}};
+const hide=()=>document.body.classList.toggle('hide');$('hd').onclick=hide;
+addEventListener('keydown',e=>{if(e.key==='h'&&e.target.tagName!=='INPUT')hide()});
+balls=C.map((f,i)=>({f,x:CX+Math.cos(i*1.7)*R*.8*((i%5)+1)/5,y:CY+Math.sin(i*1.7)*R*.8*((i%5)+1)/5,vx:0,vy:0,sh:0}));requestAnimationFrame(frame);
+</script>
+</body>
+</html>
